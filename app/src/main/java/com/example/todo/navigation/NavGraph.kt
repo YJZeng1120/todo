@@ -1,0 +1,109 @@
+package com.example.todo.navigation
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.todo.ui.screen.StatsScreen
+import com.example.todo.ui.screen.TodoDetailScreen
+import com.example.todo.ui.screen.TodoListScreen
+import com.example.todo.ui.viewmodel.StatsViewModel
+import com.example.todo.ui.viewmodel.TodoViewModel
+
+// 定義底部導覽列的頁籤
+private enum class BottomTab(val route: String, val label: String) {
+    TODO("list", "待辦"),
+    STATS("stats", "統計")
+}
+
+@Composable
+fun NavGraph() {
+    val navController = rememberNavController()
+
+    // TodoViewModel 在 NavGraph 層建立，讓 list 和 detail 共用同一個 instance
+    val todoViewModel: TodoViewModel = hiltViewModel()
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    // 只有在主頁面顯示底部導覽列，detail 頁不顯示
+    val showBottomBar = currentRoute in BottomTab.entries.map { it.route }
+
+    Scaffold(
+        bottomBar = {
+            if (showBottomBar) {
+                NavigationBar {
+                    BottomTab.entries.forEach { tab ->
+                        NavigationBarItem(
+                            selected = currentRoute == tab.route,
+                            onClick = {
+                                navController.navigate(tab.route) {
+                                    // 切換頁籤時，避免堆疊多個相同頁面
+                                    popUpTo("list") { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = {
+                                when (tab) {
+                                    BottomTab.TODO -> Icon(
+                                        Icons.AutoMirrored.Filled.List,
+                                        contentDescription = tab.label
+                                    )
+                                    BottomTab.STATS -> Icon(
+                                        Icons.Default.Star,
+                                        contentDescription = tab.label
+                                    )
+                                }
+                            },
+                            label = { Text(tab.label) }
+                        )
+                    }
+                }
+            }
+        }
+    ) { paddingValues ->
+        NavHost(
+            navController = navController,
+            startDestination = "list",
+            // 將 Scaffold 的 padding（底部導覽列高度）套用給所有頁面
+        ) {
+            composable("list") {
+                TodoListScreen(
+                    viewModel = todoViewModel,
+                    onAddClick = { navController.navigate("detail/-1") },
+                    onItemClick = { id -> navController.navigate("detail/$id") },
+                    bottomPadding = paddingValues
+                )
+            }
+            composable(
+                route = "detail/{todoId}",
+                arguments = listOf(navArgument("todoId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val todoId = backStackEntry.arguments?.getInt("todoId") ?: -1
+                TodoDetailScreen(
+                    todoId = todoId,
+                    viewModel = todoViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable("stats") {
+                // StatsViewModel 只屬於這個頁面，獨立建立
+                val statsViewModel: StatsViewModel = hiltViewModel()
+                StatsScreen(
+                    viewModel = statsViewModel,
+                    bottomPadding = paddingValues
+                )
+            }
+        }
+    }
+}
