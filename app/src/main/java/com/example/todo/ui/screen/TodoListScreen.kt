@@ -27,8 +27,7 @@ import java.util.*
 fun TodoListScreen(
     viewModel: TodoViewModel,
     onAddClick: () -> Unit,
-    onItemClick: (Int) -> Unit,
-    bottomPadding: PaddingValues = PaddingValues()
+    onItemClick: (Int) -> Unit
 ) {
     val todos by viewModel.todos.collectAsState()
 
@@ -51,8 +50,7 @@ fun TodoListScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(bottom = bottomPadding.calculateBottomPadding()),
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
                 Text("還沒有待辦事項，點擊右下角新增！", style = MaterialTheme.typography.bodyLarge)
@@ -62,10 +60,7 @@ fun TodoListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues),
-                contentPadding = PaddingValues(
-                    top = 8.dp,
-                    bottom = 8.dp + bottomPadding.calculateBottomPadding()
-                )
+                contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 items(todos, key = { it.id }) { todo ->
                     TodoListItem(

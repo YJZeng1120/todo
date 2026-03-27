@@ -1,11 +1,13 @@
 package com.example.todo.navigation
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -72,17 +74,18 @@ fun NavGraph() {
             }
         }
     ) { paddingValues ->
+        // 將底部導覽列高度套用到 NavHost，讓內層每個頁面的 Scaffold
+        // 都知道自己的可用空間終點在底部導覽列上方，FAB 才能正確定位
         NavHost(
             navController = navController,
             startDestination = "list",
-            // 將 Scaffold 的 padding（底部導覽列高度）套用給所有頁面
+            modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
         ) {
             composable("list") {
                 TodoListScreen(
                     viewModel = todoViewModel,
                     onAddClick = { navController.navigate("detail/-1") },
-                    onItemClick = { id -> navController.navigate("detail/$id") },
-                    bottomPadding = paddingValues
+                    onItemClick = { id -> navController.navigate("detail/$id") }
                 )
             }
             composable(
@@ -97,12 +100,8 @@ fun NavGraph() {
                 )
             }
             composable("stats") {
-                // StatsViewModel 只屬於這個頁面，獨立建立
                 val statsViewModel: StatsViewModel = hiltViewModel()
-                StatsScreen(
-                    viewModel = statsViewModel,
-                    bottomPadding = paddingValues
-                )
+                StatsScreen(viewModel = statsViewModel)
             }
         }
     }

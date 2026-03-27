@@ -17,10 +17,7 @@ import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StatsScreen(
-    viewModel: StatsViewModel,
-    bottomPadding: PaddingValues = PaddingValues()
-) {
+fun StatsScreen(viewModel: StatsViewModel) {
     val stats by viewModel.stats.collectAsState()
 
     Scaffold(
@@ -37,8 +34,7 @@ fun StatsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(bottom = bottomPadding.calculateBottomPadding()),
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
                 Text("還沒有任何待辦，快去新增吧！", style = MaterialTheme.typography.bodyLarge)
@@ -48,8 +44,7 @@ fun StatsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                    .padding(bottom = 16.dp + bottomPadding.calculateBottomPadding())
+                    .padding(16.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
